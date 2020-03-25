@@ -1,6 +1,6 @@
 const mongoose = require(`mongoose`);
 const uniqueValidator = require('mongoose-unique-validator')
-
+const bcrypt = require('bcrypt');
 let Schema = mongoose.Schema;
 
 let usuarioSchema = new Schema({
@@ -33,6 +33,37 @@ let usuarioSchema = new Schema({
         default: true
     }
 });
+const compareHash = function(posiblePassword, hashPassword) {
+    return new Promise((res, rej) => {
+        bcrypt.compare(posiblePassword, hashPassword, (err, match) => {
+            if (err) return rej(err);
+            return res(match);
+        })
+    })
+}
+const hashPassword = (password) => {
+    return new Promisse((res, rej) => {
+        bcrypt.genSalt(10, (err, salt) => {
+            if (err) { return rej(err); }
+            bcrypt.hash(password, salt, (err, hash) => {
+                if (err) { return rej(err); }
+                return res(hash);
+            })
+
+        })
+    })
+}
+usuarioSchema.pre('save', async function(next) {
+    const user = this;
+    if (user.isModified['password']) {
+        user.password = await hashPassword(user.password);
+    }
+    next();
+})
+usuarioSchema.methods.compare = async function(posiblePassword) {
+    const user = this;
+    return await compareHash(posiblePassword, user.password);
+}
 usuarioSchema.methods.toJSON = function() {
     let user = this;
     let userObject = user.toObject();

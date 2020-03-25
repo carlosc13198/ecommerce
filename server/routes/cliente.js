@@ -44,32 +44,51 @@ app.post('/cliente', function(req, res) {
     });
 
 })
-app.get('/cliente', verificaToken, function(req, res) {
+app.get('/cliente', async function(req, res) {
+    try {
+        let desde = req.query.desde || 0;
+        desde = Number(desde);
+        let limite = req.query.limite || 5;
+        limite = Number(limite);
+        Usuario.find({ estado: true }, ' id nombre apellido correo telefono edad')
+            .skip(desde)
+            .limit(limite)
+            .then(
 
-    let desde = req.query.desde || 0;
-    desde = Number(desde);
-    let limite = req.query.limite || 5;
-    limite = Number(limite);
-    Usuario.find({ estado: true }, ' id nombre apellido correo telefono edad')
-        .skip(desde)
-        .limit(limite)
-        .exec((err, clientes) => {
-            if (err) {
-                res.status(400).json({
-                    ok: false,
-                    err
-                });
-            }
-
-            Usuario.count({ estado: true }, (err, conteo) => {
-                res.json({
-                    ok: true,
-                    clientes,
-                    cuantos: conteo
+                Usuario.count({ estado: true }, (err, conteo) => {
+                    res.json({
+                        ok: true,
+                        clientes,
+                        cuantos: conteo
+                    })
                 })
-            })
+            )
 
-        })
+
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            err
+        });
+    }
+
+    //         .exec((err, clientes) => {
+    //             if (err) {
+    //                 res.status(400).json({
+    //                     ok: false,
+    //                     err
+    //                 });
+    //             }
+
+    //             Usuario.count({ estado: true }, (err, conteo) => {
+    //                 res.json({
+    //                     ok: true,
+    //                     clientes,
+    //                     cuantos: conteo
+    //                 })
+    //             })
+
+    //         })
 })
 app.put('/cliente/:id', verificaToken, function(req, res) {
     let id = req.params.id;
@@ -128,30 +147,45 @@ app.post('/usuario/login', (req, res) => {
     })
 })
 
-app.post('/cliente/cambio', verificaToken, (req, res) => {
+app.post('/cliente/cambio', verificaToken, async(req, res) => {
     let id = req.usuario._id;
     let body = _.pick(req.body, ['passwordact', 'password1', 'password2', 'nombre']);
-    if (!bcrypt.compareSync(body.passwordact, req.usuario.password)) {
+    const user = req.usuario;
+    const match = await user.compare(body.passwordact);
+
+    if (!match) {
         return res.status(400).json({
             ok: false,
             err: {
-                message: 'Usuario o contraseña* incorrectos'
-            }
-        });
-    }
-    if (!(body.password1 === body.password2)) {
-        return res.status(400).json({
-            ok: false,
-            err: {
-                message: 'Contraseñas no coinciden'
+                message: 'Contraseña incorrecta'
             }
         });
     }
 
-    let actualizar = {
-        password: bcrypt.hashSync(body.password1, 10),
-        nombre: body.nombre
-    };
+
+
+
+    // if (!bcrypt.compareSync(body.passwordact, req.usuario.password)) {
+    //     return res.status(400).json({
+    //         ok: false,
+    //         err: {
+    //             message: 'Usuario o contraseña* incorrectos'
+    //         }
+    //     });
+    // }
+    if (!(body.password1 === body.password2)) {
+        return res.status(400).json({
+            ok: false,
+            err: {
+                message: 'Contraseñas nuevas no coinciden'
+            }
+        });
+    }
+
+    // let actualizar = {
+    //     password: bcrypt.hashSync(body.password1, 10),
+    //     nombre: body.nombre
+    // };
 
 
     Usuario.findByIdAndUpdate(id, actualizar, { new: true }, (err, usuarioDB) => {
