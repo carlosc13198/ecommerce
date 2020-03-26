@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 const jwt = require('jsonwebtoken');
 
-const Usuario = require('../models/cliente');
+const Usuario = require('../models/usuario');
 const { verificaToken } = require('../middlewares/autenticacion');
 
 const app = express();
