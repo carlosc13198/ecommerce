@@ -148,9 +148,9 @@ app.post('/usuario/login', (req, res) => {
 })
 
 app.post('/cliente/cambio', verificaToken, async(req, res) => {
-    let id = req.usuario._id;
-    let body = _.pick(req.body, ['passwordact', 'password1', 'password2', 'nombre']);
-    const user = req.usuario;
+    let id = req.id;
+    let body = _.pick(req.body, ['passwordact', 'password1', 'password2']);
+    const user = await Usuario.findById(id);
     const match = await user.compare(body.passwordact);
 
     if (!match) {
@@ -158,6 +158,7 @@ app.post('/cliente/cambio', verificaToken, async(req, res) => {
             ok: false,
             err: {
                 message: 'Contraseña incorrecta'
+
             }
         });
     }
@@ -188,7 +189,7 @@ app.post('/cliente/cambio', verificaToken, async(req, res) => {
     // };
 
 
-    Usuario.findByIdAndUpdate(id, actualizar, { new: true }, (err, usuarioDB) => {
+    Usuario.findByIdAndUpdate(id, { password: body.password1 }, { new: true }, (err, usuarioDB) => {
         if (err) {
             return res.status(400).json({
                 ok: false,

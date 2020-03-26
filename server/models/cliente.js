@@ -42,33 +42,29 @@ const compareHash = function(posiblePassword, hashPassword) {
     })
 }
 const hashPassword = (password) => {
-    return new Promisse((res, rej) => {
-        bcrypt.genSalt(10, (err, salt) => {
-            if (err) { return rej(err); }
-            bcrypt.hash(password, salt, (err, hash) => {
+        return new Promisse((res, rej) => {
+            bcrypt.genSalt(10, (err, salt) => {
                 if (err) { return rej(err); }
-                return res(hash);
-            })
+                bcrypt.hash(password, salt, (err, hash) => {
+                    if (err) { return rej(err); }
+                    return res(hash);
+                })
 
+            })
         })
-    })
-}
-usuarioSchema.pre('save', async function(next) {
-    const user = this;
-    if (user.isModified['password']) {
-        user.password = await hashPassword(user.password);
     }
-    next();
-})
+    // usuarioSchema.pre('save', async function(next) {
+    //     const user = this;
+    //     if (user.isModified['password']) {
+    //         user.password = await hashPassword(user.password);
+    //     }
+    //     next();
+    // })
 usuarioSchema.methods.compare = async function(posiblePassword) {
     const user = this;
     return await compareHash(posiblePassword, user.password);
 }
-usuarioSchema.methods.toJSON = function() {
-    let user = this;
-    let userObject = user.toObject();
-    return userObject;
-}
+
 
 usuarioSchema.plugin(uniqueValidator, { message: '{PATH} debe de ser unico' })
 

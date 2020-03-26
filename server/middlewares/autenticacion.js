@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
-
+const Usuario = require('../models/cliente');
 // ==================
 // VERIFICAR TOKEN 
 // ======================
 
-let verificaToken = (req, res, next) => {
+let verificaToken = async(req, res, next) => {
     let token = req.get('token'); //Authorization 
 
     jwt.verify(token, process.env.SEED, (err, decoded) => {
@@ -16,8 +16,7 @@ let verificaToken = (req, res, next) => {
         }
         decoded = jwt.decode(token);
         console.log('me quedo aqui we');
-        req.usuario = decoded.usuario;
-
+        req.id = decoded.usuario._id;
         next();
     });
 
