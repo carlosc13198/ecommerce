@@ -2,6 +2,8 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
 const jwt = require('jsonwebtoken');
+const Transaction = require('../models/transaction')
+
 
 const Usuario = require('../models/usuario');
 const { verificaToken } = require('../middlewares/autenticacion');
@@ -11,6 +13,7 @@ const app = express();
 app.post('/cliente', async function(req, res) {
     let body = req.body;
     try {
+        //const t= await Transaction.findById(id).populate('user','product');
         if (!(body.password1 === body.password2)) return throwError;
         let usuario = await new Usuario({
             nombre: body.nombre,
@@ -20,12 +23,16 @@ app.post('/cliente', async function(req, res) {
             password: body.password1,
             edad: body.edad
         });
-        await usuario.save().then((usuarioDB) => {
-            res.json({
-                ok: true,
-                usuario: usuarioDB
-            });
-        }).catch(error);
+        await usuario.save().then(user => console.log('The user ' + user.nombre + ' has been added.'))
+            .catch(err => handleError(err))
+            // .then(function(usuarioDB) {
+            //     return json({
+            //         ok: true,
+            //         usuario: usuarioDB
+            //     });
+
+
+        // }).catch(error);
     } catch (error) {
         res.status(500).json({
             ok: false,
