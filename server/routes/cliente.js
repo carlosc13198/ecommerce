@@ -2,7 +2,8 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
 const jwt = require('jsonwebtoken');
-const Transaction = require('../models/transaction')
+const Transaction = require('../models/transaction');
+const Producto = require('../models/producto');
 
 
 const Usuario = require('../models/usuario');
@@ -23,16 +24,9 @@ app.post('/cliente', async function(req, res) {
             password: body.password1,
             edad: body.edad
         });
-        await usuario.save().then(user => console.log('The user ' + user.nombre + ' has been added.'))
+        await usuario.save().then(user => console.log('El usuario ' + user.nombre + 'ha sido agregado.'))
             .catch(err => handleError(err))
-            // .then(function(usuarioDB) {
-            //     return json({
-            //         ok: true,
-            //         usuario: usuarioDB
-            //     });
 
-
-        // }).catch(error);
     } catch (error) {
         res.status(500).json({
             ok: false,
@@ -42,11 +36,51 @@ app.post('/cliente', async function(req, res) {
         });
     }
 
+})
+
+app.post('/venta', async function(req, res) {
+    let body = req.body;
+    try {
+        const user = Usuario.findById(body.id_usuario);
+        if (!user) return res.status(404).json({
+            ok: false,
+            err: {
+                message: 'Id de usuario no existe'
+            }
+        })
+
+        const producto = Usuario.findById(body.id_producto);
+        if (!producto) return res.status(404).json({
+                ok: false,
+                err: {
+                    message: 'Id de producto no existe'
+                }
+            })
+            //const t= await Transaction.findById(id).populate('user','product');
+
+        let transact = await new Transaction({
+            user: user,
+            product: producto,
+            amount: Math.round(producto.precioUni - producto.discount),
+            dicount: producto.discount
+
+        });
+        await transact.save().then(trans => console.log('El transaction ha sido agregado.'))
 
 
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            ok: false,
 
+            error
+        });
+    }
 
 })
+
+
+
 app.get('/cliente', async function(req, res) {
     let desde = req.query.desde || 0;
     desde = Number(desde);
