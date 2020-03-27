@@ -2,6 +2,10 @@ const mongoose = require(`mongoose`);
 const uniqueValidator = require('mongoose-unique-validator')
 const bcrypt = require('bcrypt');
 let Schema = mongoose.Schema;
+let rolesValidos = {
+    values: ['ADMIN_ROLE', 'USER_ROLE'],
+    message: '{VALUE} NO ES UN ROL VALIDO'
+};
 
 let usuarioSchema = new Schema({
     nombre: {
@@ -28,6 +32,11 @@ let usuarioSchema = new Schema({
         type: String,
         required: false
     },
+    // role: {
+    //     type: String,
+    //     default: 'USER_ROLE',
+    //     enum: rolesValidos
+    // },
     estado: {
         type: Boolean,
         default: true
@@ -42,24 +51,25 @@ const compareHash = function(posiblePassword, hashPassword) {
     })
 }
 const hashPassword = (password) => {
-        return new Promisse((res, rej) => {
-            bcrypt.genSalt(10, (err, salt) => {
+    return new Promise((res, rej) => {
+        bcrypt.genSalt(10, (err, salt) => {
+            if (err) { return rej(err); }
+            bcrypt.hash(password, salt, (err, hash) => {
                 if (err) { return rej(err); }
-                bcrypt.hash(password, salt, (err, hash) => {
-                    if (err) { return rej(err); }
-                    return res(hash);
-                })
-
+                return res(hash);
             })
+
         })
+    })
+}
+usuarioSchema.pre('save', async function(next) {
+    const user = this;
+    console.log('entro aqui compa');
+    if (!user.isModified['password']) {
+        user.password = await hashPassword(user.password);
     }
-    // usuarioSchema.pre('save', async function(next) {
-    //     const user = this;
-    //     if (user.isModified['password']) {
-    //         user.password = await hashPassword(user.password);
-    //     }
-    //     next();
-    // })
+    next();
+})
 usuarioSchema.methods.compare = async function(posiblePassword) {
     const user = this;
     return await compareHash(posiblePassword, user.password);
@@ -68,4 +78,4 @@ usuarioSchema.methods.compare = async function(posiblePassword) {
 
 usuarioSchema.plugin(uniqueValidator, { message: '{PATH} debe de ser unico' })
 
-module.exports = mongoose.model(`cliente`, usuarioSchema);
+module.exports = mongoose.model(`Usuario`, usuarioSchema);

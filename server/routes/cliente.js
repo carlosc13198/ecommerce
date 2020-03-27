@@ -8,10 +8,26 @@ const { verificaToken } = require('../middlewares/autenticacion');
 
 const app = express();
 
-app.post('/cliente', function(req, res) {
+app.post('/cliente', async function(req, res) {
     let body = req.body;
-    if (!(body.password1 === body.password2)) {
-        return res.status(400).json({
+    try {
+        if (!(body.password1 === body.password2)) return throwError;
+        let usuario = await new Usuario({
+            nombre: body.nombre,
+            apellido: body.apellido,
+            correo: body.correo,
+            telefono: body.telefono,
+            password: body.password1,
+            edad: body.edad
+        });
+        await usuario.save().then((usuarioDB) => {
+            res.json({
+                ok: true,
+                usuario: usuarioDB
+            });
+        }).catch(error);
+    } catch (error) {
+        res.status(500).json({
             ok: false,
             err: {
                 message: 'Contraseñas no coinciden'
@@ -19,52 +35,27 @@ app.post('/cliente', function(req, res) {
         });
     }
 
-    let usuario = new Usuario({
-        nombre: body.nombre,
-        apellido: body.apellido,
-        correo: body.correo,
-        telefono: body.telefono,
-        password: bcrypt.hashSync(body.password1, 10),
-        edad: body.edad
-    });
-    usuario.save((err, usuarioDB) => {
-        if (err) {
-            res.status(400).json({
-                ok: false,
-                err
-            });
-        }
 
-        // usuarioDB.password = null;
 
-        res.json({
-            ok: true,
-            usuario: usuarioDB
-        });
-    });
+
 
 })
 app.get('/cliente', async function(req, res) {
+    let desde = req.query.desde || 0;
+    desde = Number(desde);
+    let limite = req.query.limite || 5;
+    limite = Number(limite);
     try {
-        let desde = req.query.desde || 0;
-        desde = Number(desde);
-        let limite = req.query.limite || 5;
-        limite = Number(limite);
-        Usuario.find({ estado: true }, ' id nombre apellido correo telefono edad')
+
+        const clientes = await Usuario.find({ estado: true }, ' id nombre apellido correo telefono edad')
             .skip(desde)
             .limit(limite)
-            .then(
-
-                Usuario.count({ estado: true }, (err, conteo) => {
-                    res.json({
-                        ok: true,
-                        clientes,
-                        cuantos: conteo
-                    })
-                })
-            )
-
-
+        const conteo = await Usuario.count({ estado: true })
+        res.json({
+            ok: true,
+            clientes,
+            cuantos: conteo
+        })
     } catch (error) {
         res.status(400).json({
             ok: false,
@@ -72,47 +63,29 @@ app.get('/cliente', async function(req, res) {
         });
     }
 
-    //         .exec((err, clientes) => {
-    //             if (err) {
-    //                 res.status(400).json({
-    //                     ok: false,
-    //                     err
-    //                 });
-    //             }
-
-    //             Usuario.count({ estado: true }, (err, conteo) => {
-    //                 res.json({
-    //                     ok: true,
-    //                     clientes,
-    //                     cuantos: conteo
-    //                 })
-    //             })
-
-    //         })
 })
-app.put('/cliente/:id', verificaToken, function(req, res) {
-    let id = req.params.id;
+app.put('/cliente/:id', verificaToken, async function(req, res) {
+    let id = req.id;
     let body = _.pick(req.body, ['nombre', 'apellido', 'correo', 'telefono', 'edad']);
 
-    Usuario.findByIdAndUpdate(id, body, { new: true, runValidators: true }, (err, usuarioDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err
-            });
-        }
-
+    try {
+        const user = await Usuario.findByIdAndUpdate(id, body, { new: true, runValidators: true });
         res.json({
             ok: true,
-            usuario: usuarioDB
+            usuario: user
         })
-    })
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            err: error
+        })
+    }
 
 })
 
 app.post('/usuario/login', (req, res) => {
     let body = req.body;
-    Usuario.findOne({ correo: body.correo }, (err, usuarioDB) => {
+    Usuario.findOne({ correo: body.correo }, async(err, usuarioDB) => {
         if (err) {
             return res.status(400).json({
                 ok: false,
@@ -127,8 +100,10 @@ app.post('/usuario/login', (req, res) => {
                 }
             });
         }
+        console.log(usuarioDB);
 
-        if (!bcrypt.compareSync(body.password, usuarioDB.password)) {
+        const match = await usuarioDB.compare(body.password)
+        if (!match) {
             return res.status(400).json({
                 ok: false,
                 err: {
@@ -150,58 +125,50 @@ app.post('/usuario/login', (req, res) => {
 app.post('/cliente/cambio', verificaToken, async(req, res) => {
     let id = req.id;
     let body = _.pick(req.body, ['passwordact', 'password1', 'password2']);
-    const user = await Usuario.findById(id);
-    const match = await user.compare(body.passwordact);
+    try {
 
-    if (!match) {
-        return res.status(400).json({
-            ok: false,
-            err: {
-                message: 'Contraseña incorrecta'
+        const user = await Usuario.findById(id);
+        const match = await user.compare(body.passwordact);
 
-            }
-        });
-    }
-
-
-
-
-    // if (!bcrypt.compareSync(body.passwordact, req.usuario.password)) {
-    //     return res.status(400).json({
-    //         ok: false,
-    //         err: {
-    //             message: 'Usuario o contraseña* incorrectos'
-    //         }
-    //     });
-    // }
-    if (!(body.password1 === body.password2)) {
-        return res.status(400).json({
-            ok: false,
-            err: {
-                message: 'Contraseñas nuevas no coinciden'
-            }
-        });
-    }
-
-    // let actualizar = {
-    //     password: bcrypt.hashSync(body.password1, 10),
-    //     nombre: body.nombre
-    // };
-
-
-    Usuario.findByIdAndUpdate(id, { password: body.password1 }, { new: true }, (err, usuarioDB) => {
-        if (err) {
+        if (!match) {
             return res.status(400).json({
                 ok: false,
-                err
+                err: {
+                    message: 'Contraseña incorrecta'
+
+                }
             });
         }
 
-        res.json({
-            ok: true,
-            usuario: usuarioDB
+        if (!(body.password1 === body.password2)) {
+            return res.status(400).json({
+                ok: false,
+                err: {
+                    message: 'Contraseñas nuevas no coinciden'
+                }
+            });
+        }
+
+        if (!user) return res.status(404).json({
+            ok: false,
+            err: {
+                message: 'Id de usuario no existe'
+            }
         })
-    })
+        console.log('antes de password1');
+        user.password = body.password1;
+        await user.save().then((usuarioDB) => {
+            res.json({
+                ok: true,
+                usuario: usuarioDB
+            });
+        });
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            err: error
+        });
+    }
 })
 
 

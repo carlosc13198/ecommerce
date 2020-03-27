@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const Usuario = require('../models/cliente');
+const Usuario = require('../models/usuario');
 // ==================
 // VERIFICAR TOKEN 
 // ======================
@@ -17,6 +17,7 @@ let verificaToken = async(req, res, next) => {
         decoded = jwt.decode(token);
         console.log('me quedo aqui we');
         req.id = decoded.usuario._id;
+        // req.role = decoded.usuario.role;
         next();
     });
 

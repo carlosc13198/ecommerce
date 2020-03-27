@@ -3,9 +3,11 @@ require('./config/config');
 const express = require('express');
 const app = express();
 const mongoose = require(`mongoose`);
+const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
-// const port = process.env.PORT || 3000;
+const path = require('path');
 
+dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
 
 // parse application/x-www-form-urlencoded
