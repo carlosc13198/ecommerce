@@ -41,7 +41,9 @@ app.post('/cliente', async function(req, res) {
 app.post('/venta', async function(req, res) {
     let body = req.body;
     try {
-        const user = Usuario.findById(body.id_usuario);
+
+        const user = await Usuario.findById(body.id_cliente);
+        //console.log(user);
         if (!user) return res.status(404).json({
             ok: false,
             err: {
@@ -49,7 +51,8 @@ app.post('/venta', async function(req, res) {
             }
         })
 
-        const producto = Usuario.findById(body.id_producto);
+        const producto = await Producto.findById(body.id_producto);
+        //console.log(producto);
         if (!producto) return res.status(404).json({
                 ok: false,
                 err: {
@@ -57,24 +60,20 @@ app.post('/venta', async function(req, res) {
                 }
             })
             //const t= await Transaction.findById(id).populate('user','product');
-
-        let transact = await new Transaction({
-            user: user,
-            product: producto,
-            amount: Math.round(producto.precioUni - producto.discount),
-            dicount: producto.discount
+        let a = await Math.round(producto.precioUni - producto.descuento);
+        console.log(a);
+        let transact = new Transaction({
+            user: user._id,
+            product: producto._id,
+            amount: await Math.round(producto.precioUni - producto.descuento),
+            dicount: producto.descuento
 
         });
-        await transact.save().then(trans => console.log('El transaction ha sido agregado.'))
-
+        //console.log(transact);
+        return await transact.save();
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({
-            ok: false,
-
-            error
-        });
     }
 
 })
