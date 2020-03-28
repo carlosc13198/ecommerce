@@ -24,8 +24,11 @@ app.post('/cliente', async function(req, res) {
             password: body.password1,
             edad: body.edad
         });
-        await usuario.save().then(user => console.log('El usuario ' + user.nombre + 'ha sido agregado.'))
-            .catch(err => handleError(err))
+        await usuario.save();
+        res.json({
+            ok: true,
+            usuario
+        })
 
     } catch (error) {
         res.status(500).json({
@@ -65,12 +68,17 @@ app.post('/venta', async function(req, res) {
         let transact = new Transaction({
             user: user._id,
             product: producto._id,
-            amount: await Math.round(producto.precioUni - producto.descuento),
+            amount: await Math.round((producto.precioUni - producto.descuento) * 100),
             dicount: producto.descuento
 
         });
         //console.log(transact);
-        return await transact.save();
+        await transact.save();
+        res.json({
+            ok: true,
+            transact
+        })
+
 
     } catch (error) {
         console.log(error);
@@ -78,32 +86,6 @@ app.post('/venta', async function(req, res) {
 
 })
 
-
-
-app.get('/cliente', async function(req, res) {
-    let desde = req.query.desde || 0;
-    desde = Number(desde);
-    let limite = req.query.limite || 5;
-    limite = Number(limite);
-    try {
-
-        const clientes = await Usuario.find({ estado: true }, ' id nombre apellido correo telefono edad')
-            .skip(desde)
-            .limit(limite)
-        const conteo = await Usuario.count({ estado: true })
-        res.json({
-            ok: true,
-            clientes,
-            cuantos: conteo
-        })
-    } catch (error) {
-        res.status(400).json({
-            ok: false,
-            err
-        });
-    }
-
-})
 app.put('/cliente/:id', verificaToken, async function(req, res) {
     let id = req.id;
     let body = _.pick(req.body, ['nombre', 'apellido', 'correo', 'telefono', 'edad']);
@@ -197,12 +179,12 @@ app.post('/cliente/cambio', verificaToken, async(req, res) => {
         })
         console.log('antes de password1');
         user.password = body.password1;
-        await user.save().then((usuarioDB) => {
-            res.json({
-                ok: true,
-                usuario: usuarioDB
-            });
-        });
+        await user.save();
+        res.json({
+            ok: true,
+            user
+        })
+
     } catch (error) {
         res.status(400).json({
             ok: false,
