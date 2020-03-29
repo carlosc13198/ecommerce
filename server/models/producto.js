@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const Count = require('./count');
 
-let productoSchema = new Schema({
+let productSchema = new Schema({
     code: { type: String, required: false, default: '' },
     nombre: { type: String, required: [true, 'El nombre es necesario'] },
     precioUni: { type: Number, required: [true, 'El precio únitario es necesario'] },
@@ -27,7 +27,7 @@ const contador = function(cont) {
     }
 
 }
-productoSchema.pre('save', async function(next) {
+productSchema.pre('save', async function(next) {
     const code = this.code;
     if (!code || code === '') {
         const count = await Count.findOneAndUpdate({ model: 'productos' }, { $inc: { seq: 1 } }, { upsert: true });
@@ -38,4 +38,4 @@ productoSchema.pre('save', async function(next) {
     next();
 })
 
-module.exports = mongoose.model('Producto', productoSchema);
+module.exports = mongoose.model('Producto', productSchema);

@@ -61,7 +61,65 @@ app.get('/productofinddesc', async function(req, res) {
     }
 
 })
+app.get('/productosUltimos', async function(req, res) {
+    // let codigo = req.body.codigo;
+    //console.log(codigo);
 
+    try {
+        const producto = await Producto.find().sort({ createdAt: -1 });
+
+        //const producto = await Producto.find({ descuento: { $gt: 0 } });
+        //console.log(producto);
+        res.json({
+            ok: true,
+            producto,
+        })
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error
+        });
+    }
+
+})
+
+
+app.get('/prodcutosmasvendidos', async function(req, res) {
+    try {
+
+        const producto = (await Transaction.aggregate([{
+                $lookup: {
+                    from: "productos",
+                    localField: "product",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$product"
+                }
+            }, {
+                $group: {
+                    _id: "$transaction.product._id",
+                    count: { $sum: 1 }
+                }
+            }, {
+                $sort: { "_id": 1 }
+            }
+        ]));
+        res.json({
+            ok: true,
+            producto,
+        })
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error
+        });
+    }
+
+})
 
 
 module.exports = app;
