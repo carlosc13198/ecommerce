@@ -62,9 +62,6 @@ app.get('/productofinddesc', async function(req, res) {
 
 })
 app.get('/productosUltimos', async function(req, res) {
-    // let codigo = req.body.codigo;
-    //console.log(codigo);
-
     try {
         const producto = await Producto.find().sort({ createdAt: -1 });
 
@@ -87,32 +84,24 @@ app.get('/productosUltimos', async function(req, res) {
 app.get('/prodcutosmasvendidos', async function(req, res) {
     try {
 
-        const producto = (await Transaction.aggregate([{
-                $lookup: {
-                    from: "productos",
-                    localField: "product",
-                    foreignField: "_id",
-                    as: "product"
-                }
-            },
-            {
-                $unwind: {
-                    path: "$product"
-                }
-            }, {
-                $group: {
-                    _id: "$transaction.product._id",
-                    count: { $sum: 1 }
-                }
-            }, {
-                $sort: { "_id": 1 }
-            }
-        ]));
-        res.json({
-            ok: true,
-            producto,
-        })
+        // const producto = (await Transaction.aggregate([{
+        //         $group: {
+        //             _id: $product,
+        //             count: { $sum: 1 }
+        //         }
+        //     },
+        //     {
+        //         $sort: { "_id": 1 }
+        //     }
+        // ]));
+        // res.json({
+        //     ok: true,
+        //     producto,
+        // })
+
+        const producto = await Transaction.aggregate([{ "$group": { _id: { "$toStirng": "$product" }, count: { $sum: 1 } } }])
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             ok: false,
             error
