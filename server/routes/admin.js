@@ -1,16 +1,17 @@
 const express = require('express');
-const Producto = require('../models/producto');
+const Producto = require('../models/product');
 const Transaction = require('../models/transaction');
 const _ = require('underscore');
+const { verificaAdmin } = require('../middlewares/autenticacion');
 const app = express();
-app.post('/producto', async function(req, res) {
+app.post('/product', verificaAdmin, async function(req, res) {
     let body = req.body;
     try {
         //const t = await Transaction.findById(id).populate('user','product');
         let producto = await new Producto({
             nombre: body.nombre,
-            // descuento: parseInt(body.desc),
-            precioUni: parseInt(body.prec)
+            descuento: Number(body.desc),
+            precioUni: Number(body.prec)
         });
 
         await producto.save();

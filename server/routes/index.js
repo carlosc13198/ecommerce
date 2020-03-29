@@ -3,7 +3,7 @@ const app = express();
 
 
 app.use(require('./cliente'));
-app.use(require('./producto'));
+app.use(require('./admin'));
 app.use(require('./general'));
 
 

@@ -62,7 +62,7 @@ const hashPassword = (password) => {
         })
     })
 }
-usuarioSchema.pre('save', async function(next) {
+userSchema.pre('save', async function(next) {
     const user = this;
     console.log('entro aqui compa');
     if (!user.isModified['password']) {
@@ -70,12 +70,12 @@ usuarioSchema.pre('save', async function(next) {
     }
     next();
 })
-usuarioSchema.methods.compare = async function(posiblePassword) {
+userSchema.methods.compare = async function(posiblePassword) {
     const user = this;
     return await compareHash(posiblePassword, user.password);
 }
 
 
-usuarioSchema.plugin(uniqueValidator, { message: '{PATH} debe de ser unico' })
+userSchema.plugin(uniqueValidator, { message: '{PATH} debe de ser unico' })
 
 module.exports = mongoose.model(`User`, userSchema);

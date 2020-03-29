@@ -3,10 +3,10 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 const jwt = require('jsonwebtoken');
 const Transaction = require('../models/transaction');
-const Producto = require('../models/producto');
+const Producto = require('../models/product');
 
 
-const Usuario = require('../models/usuario');
+const User = require('../models/user');
 const { verificaToken } = require('../middlewares/autenticacion');
 
 const app = express();
@@ -16,7 +16,7 @@ app.post('/cliente', async function(req, res) {
     try {
         //const t= await Transaction.findById(id).populate('user','product');
         if (!(body.password1 === body.password2)) return throwError;
-        let usuario = await new Usuario({
+        let user = await new User({
             nombre: body.nombre,
             apellido: body.apellido,
             correo: body.correo,
@@ -24,10 +24,10 @@ app.post('/cliente', async function(req, res) {
             password: body.password1,
             edad: body.edad
         });
-        await usuario.save();
+        await user.save();
         res.json({
             ok: true,
-            usuario
+            user
         })
 
     } catch (error) {
@@ -45,7 +45,7 @@ app.post('/venta', async function(req, res) {
     let body = req.body;
     try {
 
-        const user = await Usuario.findById(body.id_cliente);
+        const user = await User.findById(body.id_cliente);
         //console.log(user);
         if (!user) return res.status(404).json({
             ok: false,
@@ -91,10 +91,10 @@ app.put('/cliente/:id', verificaToken, async function(req, res) {
     let body = _.pick(req.body, ['nombre', 'apellido', 'correo', 'telefono', 'edad']);
 
     try {
-        const user = await Usuario.findByIdAndUpdate(id, body, { new: true, runValidators: true });
+        const user = await User.findByIdAndUpdate(id, body, { new: true, runValidators: true });
         res.json({
             ok: true,
-            usuario: user
+            user
         })
     } catch (error) {
         return res.status(500).json({
@@ -105,9 +105,9 @@ app.put('/cliente/:id', verificaToken, async function(req, res) {
 
 })
 
-app.post('/usuario/login', (req, res) => {
+app.post('/usuario/login', async(req, res) => {
     let body = req.body;
-    Usuario.findOne({ correo: body.correo }, async(err, usuarioDB) => {
+    await User.findOne({ correo: body.correo }, async(err, usuarioDB) => {
         if (err) {
             return res.status(400).json({
                 ok: false,
@@ -134,11 +134,11 @@ app.post('/usuario/login', (req, res) => {
             });
         }
         let token = jwt.sign({
-            usuario: usuarioDB
+            user: usuarioDB
         }, process.env.SEED, { expiresIn: process.env.CADUCIDAD_TOKEN })
         res.json({
             ok: true,
-            usuario: usuarioDB,
+            user: usuarioDB,
             token
         })
     })
@@ -149,7 +149,7 @@ app.post('/cliente/cambio', verificaToken, async(req, res) => {
     let body = _.pick(req.body, ['passwordact', 'password1', 'password2']);
     try {
 
-        const user = await Usuario.findById(id);
+        const user = await User.findById(id);
         const match = await user.compare(body.passwordact);
 
         if (!match) {

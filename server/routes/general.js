@@ -1,7 +1,7 @@
 const express = require('express');
-const Producto = require('../models/producto');
+const Producto = require('../models/product');
 const Transaction = require('../models/transaction');
-const Usuario = require('../models/usuario');
+// const Usuario = require('../models/user');
 const _ = require('underscore');
 const app = express();
 

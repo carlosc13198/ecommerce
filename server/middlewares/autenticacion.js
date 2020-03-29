@@ -17,7 +17,6 @@ let verificaToken = async(req, res, next) => {
         decoded = jwt.decode(token);
         console.log('me quedo aqui we');
         req.id = decoded.usuario._id;
-        // req.role = decoded.usuario.role;
         next();
     });
 
@@ -33,11 +32,20 @@ let verificaAdmin = async(req, res, next) => {
                 err
             })
         }
+
         decoded = jwt.decode(token);
+        console.log(decoded);
+        if (decoded.usuario.role !== 'ADMIN_ROLE') {
+            return res.status(401).json({
+                ok: false,
+                err: {
+                    message: 'No estas autorizado para usar esta funcion'
+                }
+            })
+        }
         console.log('me quedo aqui we');
         req.id = decoded.user._id;
         req.role = decoded.user.role;
-        // req.role = decoded.usuario.role;
         next();
     });
 
