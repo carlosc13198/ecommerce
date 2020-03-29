@@ -30,7 +30,7 @@ const contador = function(cont) {
 productSchema.pre('save', async function(next) {
     const code = this.code;
     if (!code || code === '') {
-        const count = await Count.findOneAndUpdate({ model: 'productos' }, { $inc: { seq: 1 } }, { upsert: true });
+        const count = await Count.findOneAndUpdate({ model: 'products' }, { $inc: { seq: 1 } }, { upsert: true });
         // const seq = await contador(count.seq);
         const seq = count.seq;
         this.code = 'PROD-' + seq;
@@ -38,4 +38,4 @@ productSchema.pre('save', async function(next) {
     next();
 })
 
-module.exports = mongoose.model('Producto', productSchema);
+module.exports = mongoose.model('Product', productSchema);

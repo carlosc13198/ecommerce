@@ -7,7 +7,7 @@ let rolesValidos = {
     message: '{VALUE} NO ES UN ROL VALIDO'
 };
 
-let usuarioSchema = new Schema({
+let userSchema = new Schema({
     nombre: {
         type: String,
         required: [true, 'El nombre es necesario']
@@ -32,11 +32,11 @@ let usuarioSchema = new Schema({
         type: String,
         required: false
     },
-    // role: {
-    //     type: String,
-    //     default: 'USER_ROLE',
-    //     enum: rolesValidos
-    // },
+    role: {
+        type: String,
+        default: 'USER_ROLE',
+        enum: rolesValidos
+    },
     estado: {
         type: Boolean,
         default: true
@@ -78,4 +78,4 @@ usuarioSchema.methods.compare = async function(posiblePassword) {
 
 usuarioSchema.plugin(uniqueValidator, { message: '{PATH} debe de ser unico' })
 
-module.exports = mongoose.model(`Usuario`, usuarioSchema);
+module.exports = mongoose.model(`User`, userSchema);
