@@ -10,6 +10,8 @@ let productSchema = new Schema({
     estado: { type: Boolean, required: true, default: true },
 
 }, { timestamps: true });
+//AQUI QUISE HACER QUE LOS CODIGOS TUVIESEN EL FORMATO PROD-0000XX
+//PERO NO FUNCIONO ASI QUE POR AHORA LO HE DEJADO CON PROD=XX
 const contador = function(cont) {
     let contar = cont.toString();
     try {

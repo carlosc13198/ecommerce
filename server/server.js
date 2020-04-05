@@ -6,6 +6,7 @@ const mongoose = require(`mongoose`);
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const path = require('path');
+const handleError = require('./middlewares/handleError');
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
 mongoose.connect(process.env.URLDB, {
@@ -25,7 +26,7 @@ app.use(bodyParser.json());
 app.use(require('./routes/index'));
 // mongoose.set('useCreateIndex', true);
 
-
+app.use(handleError);
 app.listen(process.env.PORT, () => {
     console.log(`Escuchando puerto`, process.env.PORT);
 });
